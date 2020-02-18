@@ -8,11 +8,11 @@ h_R = E/9; %hardening modulus [Mpa]
 sigma0 = E/1000; %yield stress [Mpa]
 alpha = 0.4;
 epsilon0 = 1/1000;
-epsilon1 = (1+alpha)*epsilon0;
+epsilon1 = (1+alpha).*epsilon0;
 t0 = 1;
 
 %creating vectors
-t = linspace(0,t0,1000); %time [s]
+t = linspace(0,4*t0,1000); %time [s]
 N = length(t);
 epsilon = zeros(1,N); %strain history, epsilon(t)
 p = epsilon; %accumulated plastic strain
@@ -39,7 +39,43 @@ for n = 1:1:N
    elseif t(n) > t0 && t(n) <= 3*t0
        epsilon(n) = epsilon1.*(2-t(n)./t0);
    elseif t(n) > 3*t0
-       epsilon(n) = epsilon1.*(t(n)./t-4);
+       epsilon(n) = epsilon1.*(t(n)./t0-4);
    end
 end
 
+%updating variables
+for n = 1:1:N-1
+    %creating the trial state
+    sigma_tr = sigma(n) + E.*(epsilon(n+1)-epsilon(n));
+    R_tr = R(n);
+    
+    %checks if the trial state fulfils the yield conditions at t_(n+1)
+    if f(sigma_tr,sigma0,R_tr) <= 0
+        %fulfils yield condition
+        sigma(n+1) = sigma_tr;
+        R(n+1) = R_tr;
+        epsilon_p(n+1) = epsilon_p(n);
+        epsilon_e(n+1) = epsilon(n+1)-epsilon_p(n+1);
+        p(n+1) = p(n);
+        
+    else
+        %does not fulfil the yield condition
+        delta_p = dp(sigma_tr,sigma0,R(n),E,h_R);
+        eps_p = sign(sigma_tr).*delta_p;
+        p(n+1) = p(n) + delta_p;
+        epsilon_p(n+1) = epsilon_p(n) + eps_p;
+        epsilon_e(n+1) = epsilon(n+1) - epsilon_p(n+1);
+        sigma(n+1) = sigma_tr - E.*(eps_p);
+        R(n+1) = R(n) + h_R.*delta_p;
+    end
+end
+
+figure();
+P1 = plot(epsilon,sigma);
+grid on;
+set(P1,'linewidth',1.2)%changes the thickness of the graph line
+fs = 13;
+ylabel('Stress [MPa]','Fontsize',fs) %ylabel with customized fontsize
+xlabel('Strain [mm/mm]','Fontsize',fs);
+title('Backward-Euler algorithm for linear isotropic hardening')
+saveas(gcf,'Backward-Euler.png')
