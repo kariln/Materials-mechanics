@@ -32,6 +32,7 @@ f = @(sigma_tr,sigma_0,R_tr)...
 dp = @(sigma_tr, sigma_0,R_n,E,h_R)...
     (abs(sigma_tr)-(sigma_0+R_n))/(E+h_R);
 
+
 %defines the strain history, epsilon(t), as it was defined in task 1b
 for n = 1:1:N
    if t(n) <= t0
