@@ -127,7 +127,6 @@ leg3 = legend("Cross-head_1", "Extensometer_1","Cross-head_2", "Extensometer_2",
 set(leg3, 'Location', 'SouthEast');
 saveas(gcf,'task2_stress_strain_all.png');
 hold off;
-%%
 
-
+%% Task 3-Correction of results
 
